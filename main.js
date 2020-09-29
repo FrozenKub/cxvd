@@ -1,35 +1,62 @@
 const express = require('express')
-var f;
-var result;
-var str;
-var longest;
-var word;
+let f;
+let result;
+let str;
+let longest;
+let word;
 const app=express()
 const mainUrl = '/api/Simachev/lab1/';
+app.set('view engine', 'hbs');
+
+const hbs =require("hbs");
+
+hbs.registerPartials("./views/partials/");
+
+app.get('/api/Simachev/lab1/main', function (req, res) {
+    res.render('main.hbs');
+})
+
+const fs = require('fs')
+
+const router = express.Router();
+
+app.use(function (req, res, next)
+{
+    let ur = req.url;
+	console.log(Date(), ur);
+	next();
+});
+
+
 
 // TASK 2 ///////////////////////////
+app.get('/api/Simachev/lab1/task_1', function (req, res) {
+    res.render('task2.hbs');
+})
 function getComboVombos(smth) {
     result = [];
     f = function(prefix, smth) {
-        for (var i = 0; i < smth.length; i++) {
-            result.push(prefix + smth[i]);
-            f(prefix + smth[i], smth.slice(i + 1));
+        for (let i = 0; i < smth.length; i++) {
+            result.push(prefix+smth[i]);
+            f(prefix + smth[i]+',', smth.slice(i + 1));
         }
     }
-    f(' ', smth);
+
+    f('', smth);
     return result;
 }
 
-let t1 = getComboVombos([1,2,3,4,5]);
-console.log("1) All combo-vobos: " + getComboVombos([1,2,3,4,5]))
 /////////////////////////////////////
 
 // TASK 5 ///////////////////////////
+app.get('/api/Simachev/lab1/task_2', function (req, res) {
+    res.render('task1.hbs');
+})
 function longestWord(string) {
-    str = string.split(",");
+    str = string.split(" ");
     longest = 0;
     word = null;
-    for (var i = 0; i < str.length; i++) {
+    for (let i = 0; i < str.length; i++) {
         if (longest < str[i].length) {
             longest = str[i].length;
             word = str[i];
@@ -37,10 +64,12 @@ function longestWord(string) {
     }
     return word;
 }
-var t2 = longestWord("Ayayaya,Oyoyoyoyoyoyo")
-console.log("2) Longest word is: " + longestWord("Ayayaya Oyoyoyoyoyoyo"));
 ///////////////////////////////////
 
+
+app.get('/api/Simachev/lab1/task_3', function (req, res) {
+    res.render('task3.hbs');
+})
 // TASK 18 ////////////////////////
 function delay(ms) {
     return new Promise((resolve, reject) => {
@@ -49,8 +78,16 @@ function delay(ms) {
 }
 
 
+function adminCheck(req, res, next)
+{
+if (req.query.admin=="admin")
+{
+    next();
+}
+else res.send("You are not an admin!");
+}
 
-//////////////////////////////////
+//////////////////////////////
 
 app.get(mainUrl + "task1", function (req, res) {
     let param = req.query.smth;
@@ -60,12 +97,24 @@ app.get(mainUrl + "task1", function (req, res) {
         return;
     }
 
-    var ar = param.split(',').map(Number);
+    let array = [];
+    let ar = param.split(',');
+    let arrra = getComboVombos(ar);
+    for (let k=0; k<arrra.length; k++)
+    {
+    	array[k] = arrra[k].split(',');
+    	for (let q=0; q< array[k].length; q++)
+    	{
+    		array[k][q]=Number(array[k][q]);
+    	}
+    }
+    array.push([ ]);
+    res.render("task1_ans.hbs", {title: "Answer", answer: array});
 
-    res.send(getComboVombos(ar));
+    // res.send(array);
 });
 
-app.get(mainUrl + "task2", function (req, res) {
+app.get(mainUrl + "task2", adminCheck, function (req, res) {
     let param = req.query.smth;
 
     if (param === undefined) {
@@ -73,26 +122,47 @@ app.get(mainUrl + "task2", function (req, res) {
         return;
     }
 
-    var strr = param;
+    let strr = param;
 
-    res.send(longestWord(strr));
+    res.render("task1_ans.hbs", {title: "Answer", answer: longestWord(strr)});
+    //res.send(longestWord(strr));
 });
 
 
-app.get(mainUrl + "task3", function (req, res) {
+app.get(mainUrl + "task3", adminCheck, function (req, res) {
+let param = req.query.smth;
 
-	delay(3000).then(() => res.send('3 seconds passed!'));
-    
+	delay(param).then(() => res.render("task1_ans.hbs", {title: "Answer", answer: param + ' ms'})); //res.send(param + ' ms'));
+
 });
 
 
- app.get('/t1', function(request, response) {
-     response.send(`<h1>${t1}</h1>`)
- })
- app.get('/t2', function(request, response) {
-     response.send(`<h1>${t2}</h1>`)
- })
-app.get('/t3', function(request, response) {
-    response.send(`<h1>"Hehe, boy"</h1>`)
+app.get('/api/Simachev/lab1/WHATISTHAT', function (req, res) {
+    res.render('dontknow.hbs');
 })
- app.listen(3001)
+
+
+app.use((req, res, next) => {
+    next(createError(404))
+})
+
+
+app.use((err, req, res, next) => {
+    if (err.status === undefined || (err.status <400 || err.status >599))
+    {
+        err.status = 500
+    }
+    res.status(err.status)
+    fs.appendFile('log.log',   Date()+ ' '  + 'Status: ' + err.status + ' '+ 'message: ' + err.message + req.method, function(error){})
+    res.json({
+        status: err.status,
+        message: err.message,
+        stack: err.stack
+    })
+
+
+})
+
+
+ app.use('/', router);
+ app.listen(3000)
