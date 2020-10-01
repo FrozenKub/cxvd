@@ -8,6 +8,8 @@ const app=express()
 const mainUrl = '/api/Simachev/lab1/';
 app.set('view engine', 'hbs');
 
+app.use(express.static(__dirname + '/public'));
+
 const hbs =require("hbs");
 
 hbs.registerPartials("./views/partials/");
@@ -31,7 +33,7 @@ app.use(function (req, res, next)
 
 // TASK 2 ///////////////////////////
 app.get('/api/Simachev/lab1/task_1', function (req, res) {
-    res.render('task2.hbs');
+    res.render('task1.hbs');
 })
 function getComboVombos(smth) {
     result = [];
@@ -50,7 +52,7 @@ function getComboVombos(smth) {
 
 // TASK 5 ///////////////////////////
 app.get('/api/Simachev/lab1/task_2', function (req, res) {
-    res.render('task1.hbs');
+    res.render('task2.hbs');
 })
 function longestWord(string) {
     str = string.split(" ");
@@ -143,7 +145,9 @@ app.get('/api/Simachev/lab1/WHATISTHAT', function (req, res) {
 
 
 app.use((req, res, next) => {
-    next(createError(404))
+    let err = new Error("NOT FOUND");
+    err.status = 404;
+    next(err);
 })
 
 
