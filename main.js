@@ -7,6 +7,45 @@ let word;
 const app=express()
 const mainUrl = '/api/Simachev/lab1/';
 app.set('view engine', 'hbs');
+const router = express.Router();
+
+
+
+/*
+const loginPage = "api/Simachev/lab1/log";
+const registerPage = "api/Simachev/lab1/reg";
+const logoutPage = "api/Simachev/lab1/logout"
+
+
+
+////////////////////////////////////////////////////////////
+const cookieSession = require("cookie-session");
+const cookieParser = require("cookie-parser");
+const mongoose = require("mongoose");
+const argon = require("argon2");
+const uri = require("./keys").mongodb.uri;
+const keys = require("./keys");
+const initDB = require("./db").initDB;
+const passport = require('./pass').passport;
+
+
+initDB();
+
+
+app.use(cookieSession({
+    name: "session",
+    keys: [keys.session.cookieSecret],
+    secure: false,
+    signed: true
+}));
+app.use(cookieParser());
+app.use(passport.initialize());
+app.use(passport.session());
+
+////////////////////////////////////////////////////////////
+
+*/
+
 
 app.use(express.static(__dirname + '/public'));
 
@@ -14,13 +53,61 @@ const hbs =require("hbs");
 
 hbs.registerPartials("./views/partials/");
 
+/*
+let header_data = {
+    title: "title",
+    username: undefined,
+    task1: mainUrl+'task1',
+    task2: mainUrl+'task2',
+    task3: mainUrl+'task3'
+}
+
+
+app.get('/' + loginPage, function (req, res) {
+
+    let options = {
+        ...header_data,
+        ...{
+            loginPath: '/' + loginPage,
+            buttonName: 'LOG IN'
+        }
+    }
+
+    res.render('log.hbs', options);
+});
+
+app.get('/' + registerPage, function (req, res) {
+
+    let options = {
+        ...header_data,
+        ...{
+            register: '/' + registerPage,
+            buttonName: 'REGISTER'
+        }
+    }
+
+    res.render('reg.hbs', options);
+});
+
+router.post('/' + loginPage, passport.authenticate('login', {
+    successRedirect: '/api/Simachev/lab1/main',
+    failureRedirect: '/' + loginPage,
+}));
+
+router.post('/' + registerPage, passport.authenticate('register', {
+    successRedirect: '/'+ loginPage,
+    failureRedirect: '/'+ registerPage,
+}));
+
+*/
+
+
 app.get('/api/Simachev/lab1/main', function (req, res) {
     res.render('main.hbs');
 })
 
 const fs = require('fs')
 
-const router = express.Router();
 
 app.use(function (req, res, next)
 {
@@ -86,16 +173,22 @@ if (req.query.admin=="admin")
 {
     next();
 }
-else res.send("You are not an admin!");
+else {
+    let err = new Error("FORBIDDEN");
+    err.status = 403;
+    next(err);
+}
 }
 
 //////////////////////////////
 
-app.get(mainUrl + "task1", function (req, res) {
+app.get(mainUrl + "task1", function (req, res, next) {
     let param = req.query.smth;
 
     if (param === undefined) {
-        res.send("Incorrect data");
+        let err = new Error("BAD REQUEST");
+        err.status = 400;
+        next(err);
         return;
     }
 
@@ -116,11 +209,13 @@ app.get(mainUrl + "task1", function (req, res) {
     // res.send(array);
 });
 
-app.get(mainUrl + "task2", adminCheck, function (req, res) {
+app.get(mainUrl + "task2", adminCheck, function (req, res, next) {
     let param = req.query.smth;
 
     if (param === undefined) {
-        res.send("Incorrect data");
+        let err = new Error("BAD REQUEST");
+        err.status = 400;
+        next(err);
         return;
     }
 
@@ -138,12 +233,6 @@ let param = req.query.smth;
 
 });
 
-
-app.get('/api/Simachev/lab1/WHATISTHAT', function (req, res) {
-    res.render('dontknow.hbs');
-})
-
-
 app.use((req, res, next) => {
     let err = new Error("NOT FOUND");
     err.status = 404;
@@ -152,16 +241,15 @@ app.use((req, res, next) => {
 
 
 app.use((err, req, res, next) => {
-    if (err.status === undefined || (err.status <400 || err.status >599))
+    if (err.status === undefined || err.status != 400 || err.status != 403 || err.status != 404)
     {
-        err.status = 500
+        err.status = 500;
     }
     res.status(err.status)
-    fs.appendFile('log.log',   Date()+ ' '  + 'Status: ' + err.status + ' '+ 'message: ' + err.message + req.method, function(error){})
+    fs.appendFile('log.log',   Date()+ ' '  + 'Status: ' + err.status + ' '+ 'message: ' + err.message + req.url, function(error){})
     res.json({
         status: err.status,
-        message: err.message,
-        stack: err.stack
+        message: err.message
     })
 
 
