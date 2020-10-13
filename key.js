@@ -1,8 +1,8 @@
 module.exports = {
     mongodb: {
-        uri: "mongodb+srv://user:ikmokhiriopomogisdatlabu@cluster0.lu3jz.mongodb.net/study?retryWrites=true&w=majority"
+        uri: "URI"
     },
     session: {
-        cookieSecret : "DATISMASECRET"
+        cookieSecret : "SECRET"
     }
-}
+} 
