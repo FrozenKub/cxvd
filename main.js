@@ -41,7 +41,7 @@ app.use(cookieSession({
     signed: true
 }));
 
-app.use(cookieParser()); // ?????
+app.use(cookieParser());
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
@@ -57,36 +57,13 @@ const hbs =require("hbs");
 
 hbs.registerPartials("./views/partials/");
 
-let header_data = {
-    title: title,
-    username: undefined,
-    task1: '/api/Simachev/lab1/task1',
-    task2: '/api/Simachev/lab1/task2',
-    task3: '/api/Simachev/lab1/task3'
-}
-
 
 app.get('/' + loginPage, function (req, res) {
-
-    let options = {
-        ...header_data,
-        ...{
-            loginPath: '/api/Simachev/lab1/log'
-        }
-    }
-
-    res.render('log.hbs', options);
+    res.render('log.hbs');
 });
 
 app.get("/api/Simachev/lab1/reg", function (req, res) {
-    let options = {
-        ...header_data,
-        ...{
-            registerPath: "/api/Simachev/lab1/reg"
-        }
-    }
-
-    res.render('reg.hbs', options);
+    res.render('reg.hbs');
 });
 
 
