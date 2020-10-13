@@ -7,45 +7,49 @@ let word;
 const app=express()
 const mainUrl = '/api/Simachev/lab1/';
 app.set('view engine', 'hbs');
-const router = express.Router();
+
+const title = 'WEB'
+
+const bodyParser = require('body-parser');
+
+const passport = require('./passport').passport;
+
+const flash = require('connect-flash')
+
+const initDatabase = require('./db').initDatabase;
 
 
+const cookieSession = require('cookie-session');
+const cookieParser = require('cookie-parser');
 
-/*
-const loginPage = "api/Simachev/lab1/log";
-const registerPage = "api/Simachev/lab1/reg";
-const logoutPage = "api/Simachev/lab1/logout"
+const keys = require('./key');
 
+const router = require("express").Router()
 
+initDatabase()
 
-////////////////////////////////////////////////////////////
-const cookieSession = require("cookie-session");
-const cookieParser = require("cookie-parser");
-const mongoose = require("mongoose");
-const argon = require("argon2");
-const uri = require("./keys").mongodb.uri;
-const keys = require("./keys");
-const initDB = require("./db").initDB;
-const passport = require('./pass').passport;
+app.set('view engine', 'hbs');
 
 
-initDB();
-
+app.use(express.static("public"));
 
 app.use(cookieSession({
-    name: "session",
+    name: 'session',
     keys: [keys.session.cookieSecret],
+    maxAge: 100000,
     secure: false,
     signed: true
 }));
-app.use(cookieParser());
+
+app.use(cookieParser()); // ?????
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(flash());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
 
-////////////////////////////////////////////////////////////
-
-*/
-
+const loginPage = "api/Simachev/lab1/log";
+const registerPage = "api/Simachev/lab1/reg";
 
 app.use(express.static(__dirname + '/public'));
 
@@ -53,13 +57,12 @@ const hbs =require("hbs");
 
 hbs.registerPartials("./views/partials/");
 
-/*
 let header_data = {
-    title: "title",
+    title: title,
     username: undefined,
-    task1: mainUrl+'task1',
-    task2: mainUrl+'task2',
-    task3: mainUrl+'task3'
+    task1: '/api/Simachev/lab1/task1',
+    task2: '/api/Simachev/lab1/task2',
+    task3: '/api/Simachev/lab1/task3'
 }
 
 
@@ -68,38 +71,36 @@ app.get('/' + loginPage, function (req, res) {
     let options = {
         ...header_data,
         ...{
-            loginPath: '/' + loginPage,
-            buttonName: 'LOG IN'
+            loginPath: '/api/Simachev/lab1/log'
         }
     }
 
     res.render('log.hbs', options);
 });
 
-app.get('/' + registerPage, function (req, res) {
-
+app.get("/api/Simachev/lab1/reg", function (req, res) {
     let options = {
         ...header_data,
         ...{
-            register: '/' + registerPage,
-            buttonName: 'REGISTER'
+            registerPath: "/api/Simachev/lab1/reg"
         }
     }
 
     res.render('reg.hbs', options);
 });
 
-router.post('/' + loginPage, passport.authenticate('login', {
-    successRedirect: '/api/Simachev/lab1/main',
-    failureRedirect: '/' + loginPage,
+
+app.post("/api/Simachev/lab1/log", passport.authenticate('login', {
+    successRedirect: "/api/Simachev/lab1/main",
+    failureRedirect: "/api/Simachev/lab1/reg",
+    failureFlash: true
 }));
 
-router.post('/' + registerPage, passport.authenticate('register', {
-    successRedirect: '/'+ loginPage,
-    failureRedirect: '/'+ registerPage,
+app.post("/api/Simachev/lab1/reg", passport.authenticate('register', {
+    successRedirect: "/api/Simachev/lab1/log",
+    failureRedirect: "/api/Simachev/lab1/reg",
+    failureFlash: true
 }));
-
-*/
 
 
 app.get('/api/Simachev/lab1/main', function (req, res) {
@@ -138,7 +139,11 @@ function getComboVombos(smth) {
 /////////////////////////////////////
 
 // TASK 5 ///////////////////////////
-app.get('/api/Simachev/lab1/task_2', function (req, res) {
+app.get('/api/Simachev/lab1/task_2', passport.authenticate("cookie",
+    {
+        failureRedirect: "/api/Simachev/lab1/reg",
+        failureFlash: true
+    }), function (req, res) {
     res.render('task2.hbs');
 })
 function longestWord(string) {
@@ -155,10 +160,21 @@ function longestWord(string) {
 }
 ///////////////////////////////////
 
+app.get('/api/Simachev/lab1/tech', function (req, res) {
+    res.render('tech.hbs');
+})
 
-app.get('/api/Simachev/lab1/task_3', function (req, res) {
+
+
+
+app.get('/api/Simachev/lab1/task_3',passport.authenticate("cookie",
+    {
+        failureRedirect: "/api/Simachev/lab1/reg",
+        failureFlash: true
+    }), function (req, res) {
     res.render('task3.hbs');
 })
+
 // TASK 18 ////////////////////////
 function delay(ms) {
     return new Promise((resolve, reject) => {
